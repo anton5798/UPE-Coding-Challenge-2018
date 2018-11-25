@@ -30,25 +30,27 @@ class MazeSolver:
 			self.curr = data["current_location"]
 			self.status = data["status"]
 			self.completed = data["levels_completed"]
+			self.levels = data["total_levels"]
 			return 0
 
 	def print_status(self):
-		print("SIZE: = {}. LOC = {}. STATUS = {}. LVLS COMPLETED = {}".format(
+		print("SIZE: = {}. LOC = {}. STATUS = {}. LVLS COMPLETED = {}. TOTAL = {}".format(
 			self.maze_size, 
 			self.curr,
 			self.status,
-			self.completed)
+			self.completed,
+			self.levels)
 		)
 
 	def get_direction(self, action):
 		if action == "RIGHT":
-			return [0, 1]
-		elif action == "LEFT":
-			return [0, -1]
-		elif action == "DOWN":
 			return [1, 0]
-		elif action == "UP":
+		elif action == "LEFT":
 			return [-1, 0]
+		elif action == "DOWN":
+			return [0, 1]
+		elif action == "UP":
+			return [0, -1]
 
 	def post_movement(self, action):
 		r = requests.post(geturl + self.token, data={"action": action}, headers=headers)
@@ -60,16 +62,21 @@ class MazeSolver:
 			elif data["result"] == "WALL":
 				print("Hit the wall going {} form {}".format(action, self.curr))
 			elif data["result"] == "END":
-				print("Reached destination! Here's new maze info:")
+				print("Reached destination!")
 				self.get_maze()
 				self.print_status()
-
 			elif data["result"] == "OUT_OF_BOUNDS":
 				print("Out of bounds going {} form {}".format(action, self.curr))
 
 	def solve(self):
 		self.get_maze()
 		self.print_status()
+		levels = self.levels
+		# for level in levels:
+		# 	self.path = []
+		# 	self.visited = 
+
+
 		while 1:
 			inp = input()
 			if inp == "R":
@@ -80,12 +87,12 @@ class MazeSolver:
 				self.post_movement("LEFT")
 			elif inp == "U":
 				self.post_movement("UP")
+			elif inp == "MAZE":
+				self.get_maze()
+				self.print_status()
 
 
 
 if __name__ == "__main__":
 	m = MazeSolver()
 	m.solve()
-	
-
-
