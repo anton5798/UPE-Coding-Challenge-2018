@@ -75,8 +75,10 @@ class MazeSolver:
 		# for level in levels:
 		# 	self.path = []
 		# 	self.visited = 
+		self.driver()
 
-
+		
+	def driver(self):
 		while 1:
 			inp = input()
 			if inp == "R":
