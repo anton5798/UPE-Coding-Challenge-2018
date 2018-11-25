@@ -11,7 +11,7 @@ headers = {"Content-Type": "application/x-www-form-urlencoded"}
 class MazeSolver:
 
 	def __init__(self):
-		pass
+		self.needs_reset = True
 
 	def get_token(self):
 		r = requests.post(URL + "/session", data={'uid': UID}, headers=headers)
@@ -31,6 +31,10 @@ class MazeSolver:
 			self.status = data["status"]
 			self.completed = data["levels_completed"]
 			self.levels = data["total_levels"]
+			if self.needs_reset == True:
+				self.visited = [[0 for x in range(self.maze_size[0])] for y in range(self.maze_size[1])]
+				self.visited[self.curr[1]][self.curr[0]] = 1
+				self.needs_reset = False
 			return 0
 
 	def print_status(self):
@@ -39,8 +43,9 @@ class MazeSolver:
 			self.curr,
 			self.status,
 			self.completed,
-			self.levels)
-		)
+			self.levels))
+		for i in range(self.maze_size[1]):
+			print(self.visited[i])
 
 	def get_direction(self, action):
 		if action == "RIGHT":
@@ -58,24 +63,28 @@ class MazeSolver:
 			data = r.json()
 			if data["result"] == "SUCCESS":
 				self.curr = list(map(add, self.curr, self.get_direction(action)))
+				self.visited[self.curr[1]][self.curr[0]] = 1
 				self.print_status()
+
 			elif data["result"] == "WALL":
+				wall_location = list(map(add, self.curr, self.get_direction(action)))
+				self.visited[wall_location[1]][wall_location[0]] = -1
 				print("Hit the wall going {} form {}".format(action, self.curr))
+				self.print_status()
+				
 			elif data["result"] == "END":
 				print("Reached destination!")
-				self.get_maze()
-				self.print_status()
+				self.needs_reset = True
+
 			elif data["result"] == "OUT_OF_BOUNDS":
 				print("Out of bounds going {} form {}".format(action, self.curr))
 
 	def solve(self):
 		self.get_maze()
+		
 		self.print_status()
-		levels = self.levels
-		# for level in levels:
-		# 	self.path = []
-		# 	self.visited = 
 		self.driver()
+
 
 		
 	def driver(self):
@@ -92,6 +101,7 @@ class MazeSolver:
 			elif inp == "MAZE":
 				self.get_maze()
 				self.print_status()
+			
 
 
 
