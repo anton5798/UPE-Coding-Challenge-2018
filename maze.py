@@ -1,9 +1,12 @@
 import requests
+from operator import add
+
 
 URL = "http://ec2-34-216-8-43.us-west-2.compute.amazonaws.com"
 geturl = URL + "/game?token="
 UID = "004823094"
 headers = {"Content-Type": "application/x-www-form-urlencoded"}
+
 
 class MazeSolver:
 
@@ -18,7 +21,6 @@ class MazeSolver:
 			print("My new token is {}".format(token))
 			self.token = token
 			
-
 	def get_maze(self):	
 		self.get_token()
 		r = requests.get(geturl + self.token)
@@ -30,14 +32,7 @@ class MazeSolver:
 			self.completed = data["levels_completed"]
 			return 0
 
-	def post_movement(self, action):
-		r = requests.post(geturl + self.token, data={"action": action}, headers=headers)
-		if r.status_code == requests.codes.ok:
-			data = r.json()
-			return data["result"]
-
-	def solve(self):
-		self.get_maze()
+	def print_status(self):
 		print("SIZE: = {}. LOC = {}. STATUS = {}. LVLS COMPLETED = {}".format(
 			self.maze_size, 
 			self.curr,
@@ -45,10 +40,52 @@ class MazeSolver:
 			self.completed)
 		)
 
+	def get_direction(self, action):
+		if action == "RIGHT":
+			return [0, 1]
+		elif action == "LEFT":
+			return [0, -1]
+		elif action == "DOWN":
+			return [1, 0]
+		elif action == "UP":
+			return [-1, 0]
+
+	def post_movement(self, action):
+		r = requests.post(geturl + self.token, data={"action": action}, headers=headers)
+		if r.status_code == requests.codes.ok:
+			data = r.json()
+			if data["result"] == "SUCCESS":
+				self.curr = list(map(add, self.curr, self.get_direction(action)))
+				self.print_status()
+			elif data["result"] == "WALL":
+				print("Hit the wall going {} form {}".format(action, self.curr))
+			elif data["result"] == "END":
+				print("Reached destination! Here's new maze info:")
+				self.get_maze()
+				self.print_status()
+
+			elif data["result"] == "OUT_OF_BOUNDS":
+				print("Out of bounds going {} form {}".format(action, self.curr))
+
+	def solve(self):
+		self.get_maze()
+		self.print_status()
+		while 1:
+			inp = input()
+			if inp == "R":
+				self.post_movement("RIGHT")
+			elif inp == "D":
+				self.post_movement("DOWN")
+			elif inp == "L":
+				self.post_movement("LEFT")
+			elif inp == "U":
+				self.post_movement("UP")
+
 
 
 if __name__ == "__main__":
 	m = MazeSolver()
 	m.solve()
+	
 
 
