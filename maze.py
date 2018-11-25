@@ -117,12 +117,15 @@ class MazeSolver:
 	def solve(self):
 		# self.print_status()
 		# self.driver()
-		while self.status != "FINISHED":
+		while 1:
 			self.get_maze()
+			if self.status == "FINISHED":
+				print("Congratulations! You've passed all levels!")
+				return
 			self.print_status()
 			self.solve_maze()
 
-		print("Congratulations! You've passed all levels!")
+		
 
 	def solve_maze(self):
 		self.path = []
