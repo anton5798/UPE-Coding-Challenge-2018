@@ -1,6 +1,7 @@
 import requests
 from operator import add
 import time
+import logging
 
 
 URL = "http://ec2-34-216-8-43.us-west-2.compute.amazonaws.com"
@@ -14,7 +15,7 @@ OPP_DIRECTION = {
 	"LEFT":	"RIGHT"
 }
 DIRECTIONS = ["RIGHT", "DOWN", "LEFT", "UP"]
-
+logging.basicConfig(filename='maze.log', level=logging.DEBUG)
 
 class MazeSolver:
 
@@ -22,13 +23,14 @@ class MazeSolver:
 		self.needs_reset = True
 		self.status = "PLAYING"
 		self.justpopped = False
+		
 
 	def get_token(self):
 		r = requests.post(URL + "/session", data={'uid': UID}, headers=headers)
 		if r.status_code == requests.codes.ok:
 			data = r.json()
 			token = data["token"]
-			print("My new token is {}".format(token))
+			print("My token is {}".format(token))
 			self.token = token
 			
 	def get_maze(self):	
@@ -54,8 +56,16 @@ class MazeSolver:
 			self.status,
 			self.completed,
 			self.levels))
-		# for i in range(self.maze_size[1]):
-		# 	print(self.visited[i])
+		for i in range(self.maze_size[1]):
+			print(self.visited[i])
+		logging.debug("SIZE: = {}. LOC = {}. STATUS = {}. LVLS COMPLETED = {}. TOTAL = {}".format(
+			self.maze_size, 
+			self.curr,
+			self.status,
+			self.completed,
+			self.levels))
+		for i in range(self.maze_size[1]):
+			logging.debug(self.visited[i])
 
 	def get_direction(self, action):
 		if action == "RIGHT":
@@ -75,30 +85,27 @@ class MazeSolver:
 			if data["result"] == "SUCCESS":
 				self.curr = list(map(add, self.curr, self.get_direction(action)))
 				self.visited[self.curr[1]][self.curr[0]] = 1
-				# self.print_status()
 				return "SUCCESS"
 
 			elif data["result"] == "WALL":
 				wall_location = list(map(add, self.curr, self.get_direction(action)))
 				self.visited[wall_location[1]][wall_location[0]] = -1
-				print("Hit the wall going {} form {}".format(action, self.curr))
-				# self.print_status()
+				# logging.debug("Hit the wall going {} form {}".format(action, self.curr))
 				return "WALL"
 
 			elif data["result"] == "END":
-				print("Reached destination!")
+				logging.debug("Reached destination!")
 				self.needs_reset = True
 				return "END"
 
 			elif data["result"] == "OUT_OF_BOUNDS":
-				print("Out of bounds going {} form {}".format(action, self.curr))
+				logging.debug("Out of bounds going {} form {}".format(action, self.curr))
 				return "OUT_OF_BOUNDS"
 			else:
-				print("CONNECTION ERROR on MOVEMENT POST")
-				self.print_status()
+				logging.debug("Timeout. Try again.")
 				exit()
 		else:
-			print("CONNECTION ERROR on MOVEMENT POST")
+			logging.debug("CONNECTION ERROR on MOVEMENT POST")
 			self.print_status()
 			exit()
 
@@ -107,23 +114,19 @@ class MazeSolver:
 		for direct in DIRECTIONS:
 			step = self.get_direction(direct)
 			candidate = list(map(add, self.curr, step))
-			# print("NEXT claim is {}. Candidate = {}.".format(direct, candidate))
 			if 0 <= candidate[1] < self.maze_size[1] and 0 <= candidate[0] < self.maze_size[0]:
 				if self.visited[candidate[1]][candidate[0]] == 0:
-					# print("I RETURN {}".format(direct))
 					return direct
 		return None
 
 	def solve(self):
-		# self.print_status()
-		# self.driver()
 		while 1:
 			self.get_maze()
 			if self.status == "FINISHED":
 				print("Congratulations! You've passed all levels!")
 				return
-			self.print_status()
 			self.solve_maze()
+			self.print_status()
 
 		
 
@@ -143,8 +146,6 @@ class MazeSolver:
 				next_step = self.generate_next_step(self.curr)
 			elif result == "WALL":
 				next_step = self.generate_next_step(self.curr)
-				
-
 			if next_step == None:
 				# print("NEED TO BACKTRACK")
 				last_move = self.path.pop()
@@ -154,6 +155,7 @@ class MazeSolver:
 
 			result = self.post_movement(next_step)
 
+	# Use this function in main to manually solve puzzles
 	def driver(self):
 		while 1:
 			inp = input()
