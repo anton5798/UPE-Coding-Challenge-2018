@@ -41,7 +41,7 @@ method that is called after the creation of the class. Calls
 `solve_maze()` for each maze to solve.
 
 #### `get_maze()`, `get_token()`:
-helper functions to talk to API and get data from the server;
+Helper functions to talk to API and get data from the server;
 
 #### `post_movement(action)`:
 Makes a POST request with specified *action*. 
