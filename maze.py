@@ -1,7 +1,7 @@
 import requests
 from operator import add
-import time
 import logging
+from pprint import pformat
 
 
 URL = "http://ec2-34-216-8-43.us-west-2.compute.amazonaws.com"
@@ -15,7 +15,6 @@ OPP_DIRECTION = {
 	"LEFT":	"RIGHT"
 }
 DIRECTIONS = ["RIGHT", "DOWN", "LEFT", "UP"]
-logging.basicConfig(filename='maze.log', level=logging.DEBUG)
 
 class MazeSolver:
 
@@ -23,14 +22,19 @@ class MazeSolver:
 		self.needs_reset = True
 		self.status = "PLAYING"
 		self.justpopped = False
-		
+		logging.basicConfig(filename='maze.log', level=logging.DEBUG, filemode='w')
+		urllib3_logger = logging.getLogger('urllib3')
+		urllib3_logger.setLevel(logging.CRITICAL)
+		# for key in logging.Logger.manager.loggerDict:
+		# 	print(key)
+
 
 	def get_token(self):
 		r = requests.post(URL + "/session", data={'uid': UID}, headers=headers)
 		if r.status_code == requests.codes.ok:
 			data = r.json()
 			token = data["token"]
-			print("My token is {}".format(token))
+			logging.debug("My token is {}".format(token))
 			self.token = token
 			
 	def get_maze(self):	
@@ -50,22 +54,21 @@ class MazeSolver:
 			return 0
 
 	def print_status(self):
-		print("SIZE: = {}. LOC = {}. STATUS = {}. LVLS COMPLETED = {}. TOTAL = {}".format(
-			self.maze_size, 
-			self.curr,
-			self.status,
-			self.completed,
-			self.levels))
-		for i in range(self.maze_size[1]):
-			print(self.visited[i])
+		# print("SIZE: = {}. LOC = {}. STATUS = {}. LVLS COMPLETED = {}. TOTAL = {}".format(
+		# 	self.maze_size, 
+		# 	self.curr,
+		# 	self.status,
+		# 	self.completed,
+		# 	self.levels))
+		# for i in range(self.maze_size[1]):
+		# 	print(self.visited[i])
 		logging.debug("SIZE: = {}. LOC = {}. STATUS = {}. LVLS COMPLETED = {}. TOTAL = {}".format(
 			self.maze_size, 
 			self.curr,
 			self.status,
 			self.completed,
 			self.levels))
-		for i in range(self.maze_size[1]):
-			logging.debug(self.visited[i])
+		logging.debug(pformat(self.visited))
 
 	def get_direction(self, action):
 		if action == "RIGHT":
@@ -95,6 +98,8 @@ class MazeSolver:
 
 			elif data["result"] == "END":
 				logging.debug("Reached destination!")
+				self.curr = list(map(add, self.curr, self.get_direction(action)))
+				self.visited[self.curr[1]][self.curr[0]] = "X"
 				self.needs_reset = True
 				return "END"
 
@@ -136,7 +141,7 @@ class MazeSolver:
 		if next_step == None:
 			exit("No next step found on startup.")
 		result = self.post_movement(next_step)
-
+		logging.debug(pformat(self.visited))
 		while result != "END":
 			# time.sleep(0.05)
 			if result == "SUCCESS":
