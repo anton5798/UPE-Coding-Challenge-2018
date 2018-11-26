@@ -37,7 +37,7 @@ all spots I can possibly visit from the initial location.
 ### Some other functions
 
 #### `solve()`:
-method that is called after the creation of the class. Calls 
+Method that is called after the creation of the class. Calls 
 `solve_maze()` for each maze to solve.
 
 #### `get_maze()`, `get_token()`:
