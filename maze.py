@@ -2,6 +2,7 @@ import requests
 from operator import add
 import logging
 from pprint import pformat
+import sys
 
 
 URL = "http://ec2-34-216-8-43.us-west-2.compute.amazonaws.com"
@@ -42,6 +43,9 @@ class MazeSolver:
 		r = requests.get(geturl + self.token)
 		if r.status_code == requests.codes.ok:
 			data = r.json()
+			if data["status"] == "FINISHED":
+				print("Congratulations! You've passed all levels!")
+				sys.exit()
 			self.maze_size = data["maze_size"]
 			self.curr = data["current_location"]
 			self.status = data["status"]
@@ -51,17 +55,18 @@ class MazeSolver:
 				self.visited = [[0 for x in range(self.maze_size[0])] for y in range(self.maze_size[1])]
 				self.visited[self.curr[1]][self.curr[0]] = 1
 				self.needs_reset = False
+			# self.print_status()
 			return 0
 
 	def print_status(self):
-		# print("SIZE: = {}. LOC = {}. STATUS = {}. LVLS COMPLETED = {}. TOTAL = {}".format(
-		# 	self.maze_size, 
-		# 	self.curr,
-		# 	self.status,
-		# 	self.completed,
-		# 	self.levels))
-		# for i in range(self.maze_size[1]):
-		# 	print(self.visited[i])
+		print("SIZE: = {}. LOC = {}. STATUS = {}. LVLS COMPLETED = {}. TOTAL = {}".format(
+			self.maze_size, 
+			self.curr,
+			self.status,
+			self.completed,
+			self.levels))
+		for i in range(self.maze_size[1]):
+			print(self.visited[i])
 		logging.debug("SIZE: = {}. LOC = {}. STATUS = {}. LVLS COMPLETED = {}. TOTAL = {}".format(
 			self.maze_size, 
 			self.curr,
@@ -127,9 +132,6 @@ class MazeSolver:
 	def solve(self):
 		while 1:
 			self.get_maze()
-			if self.status == "FINISHED":
-				print("Congratulations! You've passed all levels!")
-				return
 			self.solve_maze()
 			self.print_status()
 
